@@ -2,6 +2,8 @@ use std::{
     fs,
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
+    thread, 
+    time::Duration,
 };
 
 fn main() {
@@ -34,6 +36,10 @@ fn handle_connection(mut stream: TcpStream) {
 
             let (status_line, filename) = match path {
                 "/" => ("HTTP/1.1 200 OK", "static/hello.html"),
+                "/sleep" => {
+                    thread::sleep(Duration::from_secs(10));
+                    ("HTTP/1.1 200 OK", "static/hello.html")
+                }
                 _ => ("HTTP/1.1 404 NOT FOUND", "static/404.html"),
             };
 
