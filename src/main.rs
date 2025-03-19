@@ -23,11 +23,27 @@ fn handle_connection(mut stream: TcpStream) {
         .take_while(|line| !line.is_empty())
         .collect();
     
-    let status_line = "HTTP/1.1 200 OK";
-    let contents = fs::read_to_string("hello.html").unwrap();
-    let length = contents.len();
-    
-   let response = format!("{status_line}\r\nContent-Length:{length}\r\n\r\n{contents}"); 
+    if let Some(first_line) = http_request.first() {
+        let parts: Vec<&str> = first_line.split_whitespace().collect();
 
-    stream.write_all(response.as_bytes()).unwrap();
+        if parts.len() > 1 {
+
+            let path = parts[1];
+
+            println!("Requested path: {}", path);
+
+            let (status_line, filename) = match path {
+                "/" => ("HTTP/1.1 200 OK", "static/hello.html"),
+                _ => ("HTTP/1.1 404 NOT FOUND", "static/404.html"),
+            };
+
+            let contents = fs::read_to_string(filename).unwrap();
+
+            let length = contents.len();
+    
+            let response = format!("{status_line}\r\nContent-Length:{length}\r\n\r\n{contents}"); 
+
+            stream.write_all(response.as_bytes()).unwrap();
+        }
+    }
 }
